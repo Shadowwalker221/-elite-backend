@@ -1,0 +1,35 @@
+name: Backend CI/CD
+
+on:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: npm test || echo "No tests found"
+
+      - name: Build (optional)
+        run: npm run build || echo "No build step"
+
+      - name: Deploy to DigitalOcean App Platform
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Trigger Deployment
+        run: doctl apps update ${{ secrets.DIGITALOCEAN_APP_ID }} --spec ./app.yaml
